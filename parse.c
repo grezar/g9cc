@@ -44,19 +44,17 @@ int consume(int ty) {
     return 1;
 }
 
-Node *term() {
-    if (consume('(')) {
-        Node *node = add();
-        if (!consume(')'))
-            error("開きカッコに対応する閉じカッコがありません: %s", current_token(pos)->input);
-        return node;
+Node *add() {
+    Node *node = mul();
+
+    for (;;) {
+        if (consume('+'))
+            node = new_node('+', node, mul());
+        else if (consume('-'))
+            node = new_node('-', node, mul());
+        else
+            return node;
     }
-
-    if (current_token(pos)->ty == TK_NUM)
-        return new_node_num(current_token(pos++)->val);
-
-    error("数値でも開きカッコでもないトークンです: %s", current_token(pos)->input);
-    return NULL;
 }
 
 Node *mul() {
@@ -72,17 +70,19 @@ Node *mul() {
     }
 }
 
-Node *add() {
-    Node *node = mul();
-
-    for (;;) {
-        if (consume('+'))
-            node = new_node('+', node, mul());
-        else if (consume('-'))
-            node = new_node('-', node, mul());
-        else
-            return node;
+Node *term() {
+    if (consume('(')) {
+        Node *node = add();
+        if (!consume(')'))
+            error("開きカッコに対応する閉じカッコがありません: %s", current_token(pos)->input);
+        return node;
     }
+
+    if (current_token(pos)->ty == TK_NUM)
+        return new_node_num(current_token(pos++)->val);
+
+    error("数値でも開きカッコでもないトークンです: %s", current_token(pos)->input);
+    return NULL;
 }
 
 Token *current_token(int pos) {
