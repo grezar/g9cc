@@ -15,24 +15,17 @@ enum {
     ND_NUM = 256,
 };
 
-typedef struct {
-    int ty;
-    int val;
-    char *input;
-} Token;
-
-typedef struct {
-    void **data;
-    int capacity;
-    int len;
-} Vector;
-
-Token tokens[100];
+Vector *tokens;
 
 int pos;
 
+Token *current_token(int pos) {
+    return (Token *)tokens->data[pos];
+}
+
 void tokenize(char *p) {
-    int i = 0;
+    tokens = new_vector();
+
     while (*p) {
         if (isspace(*p)) {
             p++;
@@ -40,18 +33,20 @@ void tokenize(char *p) {
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
-            tokens[i].ty = *p;
-            tokens[i].input = p;
-            i++;
+            Token *token = malloc(sizeof(Token));
+            token->ty = *p;
+            token->input = p;
+            vec_push(tokens, token);
             p++;
             continue;
         }
 
         if (isdigit(*p)) {
-            tokens[i].ty = TK_NUM;
-            tokens[i].input = p;
-            tokens[i].val = strtol(p, &p, 10);
-            i++;
+            Token *token = malloc(sizeof(Token));
+            token->ty = TK_NUM;
+            token->input = p;
+            token->val = strtol(p, &p, 10);
+            vec_push(tokens, token);
             continue;
         }
 
@@ -59,8 +54,10 @@ void tokenize(char *p) {
         exit(1);
     }
 
-    tokens[i].ty = TK_EOF;
-    tokens[i].input = p;
+    Token *token = malloc(sizeof(Token));
+    token->ty = TK_EOF;
+    token->input = p;
+    vec_push(tokens, token);
 }
 
 void error(char *fmt, ...) {
@@ -87,7 +84,7 @@ Node *new_node_num(int val) {
 }
 
 int consume(int ty) {
-    if (tokens[pos].ty != ty)
+    if (current_token(pos)->ty != ty)
         return 0;
     pos++;
     return 1;
@@ -97,15 +94,14 @@ Node *term() {
     if (consume('(')) {
         Node *node = add();
         if (!consume(')'))
-            error("開きカッコに対応する閉じカッコがありません: %s", tokens[pos].input);
+            error("開きカッコに対応する閉じカッコがありません: %s", current_token(pos)->input);
         return node;
     }
 
-    if (tokens[pos].ty == TK_NUM)
-        return new_node_num(tokens[pos++].val);
+    if (current_token(pos)->ty == TK_NUM)
+        return new_node_num(current_token(pos++)->val);
 
-    error("数値でも開きカッコでもないトークンです: %s", tokens[pos].input);
-
+    error("数値でも開きカッコでもないトークンです: %s", current_token(pos)->input);
     return NULL;
 }
 
@@ -192,7 +188,7 @@ void runtest() {
     Vector *vec = new_vector();
     expect(__LINE__, 0, vec->len);
 
-    for (int i = 0; i < 100; i++)
+    for (long i = 0; i < 100; i++)
         vec_push(vec, (void *)i);
 
     expect(__LINE__, 100, vec->len);
