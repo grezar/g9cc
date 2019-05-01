@@ -1,3 +1,7 @@
+enum {
+    ND_NUM = 256,
+};
+
 typedef struct Node {
     int ty;
     struct Node *lhs;
@@ -25,3 +29,6 @@ Node *new_node_num(int val);
 Vector *new_vector();
 void vec_push(Vector *vec, void *elem);
 Token *current_token(int pos);
+void runtest();
+void tokenize(char *p);
+void gen(Node *nonde);
