@@ -22,8 +22,9 @@ typedef struct Token {
 } Token;
 
 Node *add();
-Node *term();
 Node *mul();
+Node *unary();
+Node *term();
 Node *new_node(int ty, Node *lhs, Node *rhs);
 Node *new_node_num(int val);
 Vector *new_vector();
