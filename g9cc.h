@@ -21,6 +21,10 @@ typedef struct Token {
     char *input;
 } Token;
 
+Node *code[100];
+
+void program();
+Node *stmt();
 Node *add();
 Node *mul();
 Node *unary();
@@ -33,3 +37,4 @@ Token *current_token(int pos);
 void runtest();
 void tokenize(char *p);
 void gen(Node *nonde);
+void error(char *fmt, ...);

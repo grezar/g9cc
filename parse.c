@@ -44,6 +44,20 @@ int consume(int ty) {
     return 1;
 }
 
+void program() {
+    int i = 0;
+    while(current_token(pos)->ty != TK_EOF)
+        code[i++] = stmt();
+    code[i] = NULL;
+}
+
+Node *stmt() {
+    Node *node = add();
+    if (!consume(';'))
+        error("';'ではないトークンです %s\n", current_token(pos)->input);
+    return node;
+}
+
 Node *add() {
     Node *node = mul();
 
@@ -106,7 +120,7 @@ void tokenize(char *p) {
             continue;
         }
 
-        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == ';') {
             Token *token = malloc(sizeof(Token));
             token->ty = *p;
             token->input = p;
@@ -133,4 +147,3 @@ void tokenize(char *p) {
     token->input = p;
     vec_push(tokens, token);
 }
-

@@ -15,13 +15,15 @@ int main(int argc, char **argv) {
     }
 
     tokenize(argv[1]);
-    Node *node = add();
+    program();
 
     printf(".intel_syntax noprefix\n");
     printf(".global _main\n");
     printf("_main:\n");
 
-    gen(node);
+    for (int i = 0; code[i]; i++) {
+        gen(code[i]);
+    }
 
     printf("  pop rax\n");
     printf("  ret\n");
