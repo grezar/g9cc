@@ -32,5 +32,7 @@ try 18 'y=19; p=1; y-p;'
 try 100 'a=10; c=10; a * c;'
 try 10 'a = 100; b = 10; a / b;'
 try 15 'a = 3; b = 2; c = a + b; a * c;'
+try 2 'return 2;'
+try 5 'return 5; return 8;'
 
 echo OK
