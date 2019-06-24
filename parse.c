@@ -7,6 +7,7 @@
 
 enum {
     TK_NUM = 256,
+    TK_IDENT,
     TK_EOF,
 };
 
@@ -44,31 +45,36 @@ int consume(int ty) {
     return 1;
 }
 
-void program() {
-    int i = 0;
-    while(current_token(pos)->ty != TK_EOF)
-        code[i++] = stmt();
-    code[i] = NULL;
-}
-
-Node *stmt() {
-    Node *node = add();
-    if (!consume(';'))
-        error("';'ではないトークンです %s\n", current_token(pos)->input);
-    return node;
-}
-
-Node *add() {
-    Node *node = mul();
-
-    for (;;) {
-        if (consume('+'))
-            node = new_node('+', node, mul());
-        else if (consume('-'))
-            node = new_node('-', node, mul());
-        else
-            return node;
+Node *term() {
+    if (consume('(')) {
+        Node *node = add();
+        if (!consume(')'))
+            error("開きカッコに対応する閉じカッコがありません: %s", current_token(pos)->input);
+        return node;
     }
+
+    if (current_token(pos)->ty == TK_NUM)
+        return new_node_num(current_token(pos++)->val);
+
+    if (current_token(pos)->ty == TK_IDENT) {
+        char varname = current_token(pos++)->input[0];
+
+        Node *node = malloc(sizeof(Node));
+        node->ty = ND_LVAR;
+        node->offset = (varname - 'a' + 1) * 8;
+        return node;
+    }
+
+    error("数値でも開きカッコでもないトークンです: %s", current_token(pos)->input);
+    return NULL;
+}
+
+Node *unary() {
+    if (consume('+'))
+        return term();
+    if (consume('-'))
+        return new_node('-', new_node_num(0), term());
+    return term();
 }
 
 Node *mul() {
@@ -84,27 +90,42 @@ Node *mul() {
     }
 }
 
-Node *unary() {
-    if (consume('+'))
-        return term();
-    if (consume('-'))
-        return new_node('-', new_node_num(0), term());
-    return term();
+Node *add() {
+    Node *node = mul();
+
+    for (;;) {
+        if (consume('+'))
+            node = new_node('+', node, mul());
+        else if (consume('-'))
+            node = new_node('-', node, mul());
+        else
+            return node;
+    }
 }
 
-Node *term() {
-    if (consume('(')) {
-        Node *node = add();
-        if (!consume(')'))
-            error("開きカッコに対応する閉じカッコがありません: %s", current_token(pos)->input);
-        return node;
-    }
+Node *assign() {
+    Node *node = add();
+    if (consume('='))
+        node = new_node('=', node, assign());
+    return node;
+}
 
-    if (current_token(pos)->ty == TK_NUM)
-        return new_node_num(current_token(pos++)->val);
+Node *expr() {
+    return assign();
+}
 
-    error("数値でも開きカッコでもないトークンです: %s", current_token(pos)->input);
-    return NULL;
+Node *stmt() {
+    Node *node = expr();
+    if (!consume(';'))
+        error("';'ではないトークンです %s\n", current_token(pos)->input);
+    return node;
+}
+
+void program() {
+    int i = 0;
+    while(current_token(pos)->ty != TK_EOF)
+        code[i++] = stmt();
+    code[i] = NULL;
 }
 
 Token *current_token(int pos) {
@@ -120,7 +141,7 @@ void tokenize(char *p) {
             continue;
         }
 
-        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == ';') {
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == ';' || *p  ==  '=') {
             Token *token = malloc(sizeof(Token));
             token->ty = *p;
             token->input = p;
@@ -135,6 +156,15 @@ void tokenize(char *p) {
             token->input = p;
             token->val = strtol(p, &p, 10);
             vec_push(tokens, token);
+            continue;
+        }
+
+        if ('a' <= *p && *p <= 'z') {
+            Token *token = malloc(sizeof(Token));
+            token->ty = TK_IDENT;
+            token->input = p;
+            vec_push(tokens, token);
+            p++;
             continue;
         }
 

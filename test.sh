@@ -27,5 +27,10 @@ try 10 '+10;'
 try 201 "$(for i in {1..200}; do echo -n 1+; done && echo -n 1\;)"
 try 41 '41;'
 try 100 '81 + 19;'
+try 3 'a=1;b=2;a+b;'
+try 18 'y=19; p=1; y-p;'
+try 100 'a=10; c=10; a * c;'
+try 10 'a = 100; b = 10; a / b;'
+try 15 'a = 3; b = 2; c = a + b; a * c;'
 
 echo OK

@@ -1,5 +1,6 @@
 enum {
     ND_NUM = 256,
+    ND_LVAR,
 };
 
 typedef struct Node {
@@ -7,6 +8,7 @@ typedef struct Node {
     struct Node *lhs;
     struct Node *rhs;
     int val;
+    int offset;
 } Node;
 
 typedef struct Vector {
